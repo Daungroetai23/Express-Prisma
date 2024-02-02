@@ -1,0 +1,92 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model User {
+  id       Int       @id @default(autoincrement())
+  username String    @unique
+  password String
+  fullName String
+  email    String    @unique
+  address  String
+  phone    String
+  role     Role       @default(USER)
+  bookings Booking[]
+  createdAt  DateTime @default(now()) // เพิ่ม field สำหรับ timestamp ของการสร้าง
+  updatedAt  DateTime @updatedAt       // เพิ่ม field สำหรับ timestamp ของการอัปเดต
+}
+
+model Movie {
+  id         Int        @id @default(autoincrement())
+  name       String
+  genre      String
+  popularity String
+  actors     String
+  director   String
+  showtimes  Showtime[]
+  bookings   Booking[]
+}
+
+model Showtime {
+  id      Int       @id @default(autoincrement())
+  date    DateTime
+  time    DateTime
+  cinema  String
+  price   Float
+  movie   Movie     @relation(fields: [movieId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  movieId Int
+  seats   Seat[]
+  Booking Booking[]
+}
+
+// กำหนดโมเดลสำหรับที่นั่ง
+model Seat {
+  id         Int       @id @default(autoincrement())
+  seatNumber Int
+  type       String
+  price      Float
+  bookings   Booking[]
+  Showtime   Showtime? @relation(fields: [showtimeId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  showtimeId Int?
+}
+
+// กำหนดโมเดลสำหรับการจอง
+model Booking {
+  id         Int      @id @default(autoincrement())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  movie      Movie    @relation(fields: [movieId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  showtime   Showtime @relation(fields: [showtimeId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  seat       Seat     @relation(fields: [seatId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  userId     Int
+  movieId    Int
+  showtimeId Int
+  seatId     Int
+  quantity   Int
+  price      Float
+  Payment    Payment?
+  createdAt  DateTime @default(now()) // เพิ่ม field สำหรับ timestamp ของการสร้าง
+  updatedAt  DateTime @updatedAt       // เพิ่ม field สำหรับ timestamp ของการอัปเดต
+}
+
+model Payment {
+  id          Int      @id @default(autoincrement())
+  booking     Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  bookingId   Int      @unique
+  amount      Float
+  paymentTime DateTime @default(now())
+  createdAt  DateTime @default(now()) // เพิ่ม field สำหรับ timestamp ของการสร้าง
+  updatedAt  DateTime @updatedAt       // เพิ่ม field สำหรับ timestamp ของการอัปเดต
+}
